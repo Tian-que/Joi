@@ -1,6 +1,7 @@
 import IndexLayout from "@/page/IndexLayout.vue";
 import { createRouter, createWebHashHistory, type RouteRecordRaw } from "vue-router";
 import InGame from "@/page/InGame.vue";
+import InGame2 from "@/page/InGame2.vue";
 import HistoryMatch from "@/page/HistoryMatch.vue";
 import Setting from "@/page/Setting.vue";
 import useNavStore from "@/store/nav";
@@ -44,7 +45,13 @@ const routes = [
 				name: "rune",
 				component: Rune,
 				meta: { title: "符文" }
-			}
+			},
+			{
+				path: "inGame2/:showAnalysis?/:myTeam?",
+				name: "inGame2",
+				component: InGame2,
+				meta: { title: "乱斗内战" }
+			},
 		]
 	}
 ] as RouteRecordRaw[];

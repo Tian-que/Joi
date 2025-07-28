@@ -301,3 +301,63 @@ export const restartUX = async () => {
 		url: "/riotclient/kill-and-restart-ux"
 	});
 };
+
+// 创建房间
+export async function createLobby() {
+	return await httpRequest<void>({
+		method: "POST",
+		url: `/lol-lobby/v2/lobby`,
+		body: {
+			"queueId": -1,
+			"isCustom": true,
+			"customGameLobby": {
+			  "lobbyName": "星天圣尊的对局",
+			  "lobbyPassword": "",
+			  "configuration": {
+				"mapId": 12,
+				"gameMode": "ARAM",
+				"mutators": {
+					"advancedLearningQuests": false,
+					"allowTrades": true,
+					"banMode": "SkipBanStrategy",
+					"banTimerDuration": 0,
+					"battleBoost": false,
+					"crossTeamChampionPool": false,
+					"deathMatch": false,
+					"doNotRemove": false,
+					"duplicatePick": false,
+					"exclusivePick": true,
+					"gameModeOverride": null,
+					"id": 4,
+					"learningQuests": false,
+					"mainPickTimerDuration": 0,
+					"maxAllowableBans": 0,
+					"name": "GAME_CFG_PICK_RANDOM",
+					"numPlayersPerTeamOverride": null,
+					"onboardCoopBeginner": false,
+					"pickMode": "AllRandomPickStrategy",
+					"postPickTimerDuration": 100,
+					"reroll": false,
+					"teamChampionPool": false
+				  },
+				"spectatorPolicy": "LobbyAllowed",
+				"teamSize": 2,
+				"maxPlayerCount": 10,
+				"tournamentGameMode": "",
+				"tournamentPassbackUrl": "",
+				"tournamentPassbackDataPacket": "",
+				"gameServerRegion": "",
+				"spectatorDelayEnabled": false,
+				"hidePublicly": false
+			  },
+			  "teamOne": [],
+			  "teamTwo": [],
+			  "spectators": [],
+			  "practiceGameRewardsDisabledReasons": [],
+			  "gameId": 0
+			},
+			"gameCustomization": {}
+		  }
+		  
+	});
+}

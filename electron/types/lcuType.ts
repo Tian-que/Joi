@@ -705,3 +705,10 @@ export interface TeamMemberInfo {
 	score?: number;
   note?: PlayerNote
 }
+
+export interface LobbyTeamMemberInfo {
+	puuid: string;
+	summonerName?: string;
+	summonerInfo?: SummonerInfo;
+	teamId: number;
+}

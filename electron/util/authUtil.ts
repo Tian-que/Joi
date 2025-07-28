@@ -35,7 +35,7 @@ export async function getAuthInfo(): Promise<Credentials> {
 			//使用管道符解决wmic输出utf16le编码到文件的问题
 			//https://stackoverflow.com/questions/55310573/wmic-command-in-batch-outputting-non-utf-8-text-files
 			const rawStdout = await executeCommand(
-				"wmic PROCESS WHERE name='LeagueClientUx.exe' GET commandline /value  | find /v \"\""
+				"wmic PROCESS WHERE name='LeagueClientUx.exe' GET commandline /value  | C:\\Windows\\System32\\find /v \"\""
 			);
 			const portRegex = /--app-port=([0-9]+)(?= *"| --)/;
 			const passwordRegex = /--remoting-auth-token=(.+?)(?= *"| --)/;

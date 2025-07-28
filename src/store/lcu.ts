@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { Ref, ref } from "vue";
 import lcuApi from "@/api/lcuApi";
-import { SummonerInfo, TeamMember, TeamMemberInfo } from "@@/types/lcuType";
+import { LobbyTeamMemberInfo, SummonerInfo, TeamMember, TeamMemberInfo } from "@@/types/lcuType";
 import useSettingStore from "@/store/setting";
 import { GameMode, PositionName, Rune } from "@@/types/opgg_rank_type";
 import { analysisTeam, analysisTeamUpInfo, generateAnalysisMsg } from "@/utils/gameAnalysis";
@@ -55,6 +55,7 @@ const useLCUStore = defineStore("lcu", () => {
 	const currentPosition = ref<PositionName>();
 	const currentChatRoomId = ref<string>();
 	const myTeam = ref<TeamMemberInfo[]>([]);
+	const lobbyMembers = ref<LobbyTeamMemberInfo[]>([]);
 	const myTeamAnalysisError = ref(false);
 	const theirTeam = ref<TeamMemberInfo[]>([]);
 	const theirTeamAnalysisError = ref(false);
@@ -200,6 +201,25 @@ const useLCUStore = defineStore("lcu", () => {
 		}
 	}
 
+	//更新房间内人员信息
+	async function updateLobbyMembersInfo(teams: LobbyTeamMemberInfo[]) {
+		lobbyMembers.value = await Promise.all(
+			teams.map(async (t) => {
+				const summonerInfo = await lcuApi.getSummonerByPuuid(t.puuid);
+				return {
+					puuid: t.puuid,
+					summonerName: summonerInfo.gameName,
+					teamId: t.teamId,
+					summonerInfo: summonerInfo
+				} as LobbyTeamMemberInfo;
+			})
+		).catch((e) => {
+			message.error(e.message);
+			console.log("对方成员信息失败：", (e as Error)?.message);
+			return [];
+		});
+	}
+
 	async function fetchTeamMembersGameDetail(teams: TeamMemberInfo[]) {
 		return await Promise.all(
 			teams.map(
@@ -298,6 +318,8 @@ const useLCUStore = defineStore("lcu", () => {
 	return {
 		champId,
 		updateChampId,
+		updateLobbyMembersInfo,
+		lobbyMembers,
 		updateTeamsInfo,
 		currentChatRoomId,
 		currentGameMode,

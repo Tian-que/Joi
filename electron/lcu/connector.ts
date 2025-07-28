@@ -7,6 +7,7 @@ import { Handle } from "../const/const";
 import { getCurrentSummoner } from "./lcuRequest";
 import logger from "../lib/logger";
 import { setting } from "../config";
+import { LobbyTeamMemberInfo } from "../types/lcuType";
 
 let credentials: Credentials | null;
 let ws: LeagueWebSocket | null;
@@ -99,5 +100,17 @@ function wsSubscribe(ws: LeagueWebSocket) {
 		logger.info("gameflow-phase", data);
 		sendToWebContent(Handle.gameFlowPhase, data);
 		Object.values(LCUEventHandlers).forEach((handler) => handler(data));
+	});
+	ws.subscribe("/lol-lobby/v2/lobby/members", async (data) => {
+		let members = data.map(item => {
+			const member: LobbyTeamMemberInfo = {
+			    puuid: item.puuid,
+			    teamId: item.teamId
+			};
+			return member;
+		});
+		logger.info("members", members);
+		
+		sendToWebContent(Handle.members, members);
 	});
 }

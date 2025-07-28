@@ -44,7 +44,8 @@ export default {
 	getOPGGRunes: (champId: number, gameMode?: GameMode, position?: PositionName) =>
 		captureError<Rune[]>(window.ipcRenderer.invoke(Handle.getOPGGRunes, champId, gameMode, position)),
 	applyRune: (data: RuneConfig) => captureError<void>(window.ipcRenderer.invoke(Handle.applyRune, data)),
-  startLoLClient: () => captureError<void>(window.ipcRenderer.invoke(Handle.startLoLClient)),
+	createLobby: () => captureError<SummonerInfo>(window.ipcRenderer.invoke(Handle.createLobby)),
+    startLoLClient: () => captureError<void>(window.ipcRenderer.invoke(Handle.startLoLClient)),
 	sendChatMsgToRoom: (conversationId: string, msg: string, type: string = "chat") =>
 		captureError<void>(window.ipcRenderer.invoke(Handle.sendChatMsgToRoom, conversationId, msg, type))
 };

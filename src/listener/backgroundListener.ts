@@ -1,8 +1,9 @@
 import useLCUStore, { ConnectStatusEnum, GameFlowPhase } from "@/store/lcu";
 import { Handle } from "@@/const/const";
 import router from "@/router";
-import { SimpleChampSelectPhaseSessionData, TeamMember, TeamMemberInfo } from "@@/types/lcuType";
+import { LobbyTeamMemberInfo, SimpleChampSelectPhaseSessionData, TeamMember, TeamMemberInfo } from "@@/types/lcuType";
 import IpcRendererEvent = Electron.IpcRendererEvent;
+import logger from "@@/lib/logger";
 
 export function setupListener() {
 	const lcuStore = useLCUStore();
@@ -23,6 +24,9 @@ export function setupListener() {
 		console.log("gameFlowPhase", phase);
 		if (phase === "Matchmaking") {
 			lcuStore.updateChampId(0);
+		} else if (phase === "Lobby") {
+			// lcuStore.updateTeamsInfo(teams);
+			let a = 0;
 		}
 		lcuStore.gameFlowPhase = phase;
 	});
@@ -37,6 +41,12 @@ export function setupListener() {
 	window.ipcRenderer.on(Handle.gameTeams, async (event: IpcRendererEvent, teams: TeamMember[][]) => {
 		console.log("gameTeams", teams);
 		lcuStore.updateTeamsInfo(teams);
+	});
+	window.ipcRenderer.on(Handle.members, async (event: IpcRendererEvent, members: LobbyTeamMemberInfo[]) => {
+		console.log("lobbyMenbers", members);
+		
+		// logger.info("members", members);
+		lcuStore.updateLobbyMembersInfo(members);
 	});
 
 	window.ipcRenderer.on(Handle.gameSessionMyTeam, async (event: IpcRendererEvent, myTeam: TeamMemberInfo[]) => {
