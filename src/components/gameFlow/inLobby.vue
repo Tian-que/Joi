@@ -151,16 +151,6 @@ const select_champion = (id: number | boolean) => {
 // 选中的英雄ID
 const selectedChampionId = ref<number | null>(null);
 
-// 计算每行5个英雄的分组（只显示前20个英雄）
-const groupedChampions = computed(() => {
-	const displayChampions = championList.value.slice(0, 20); // 只显示前20个
-	const result = [];
-	for (let i = 0; i < displayChampions.length; i += 5) {
-		result.push(displayChampions.slice(i, i + 5));
-	}
-	return result;
-});
-
 </script>
 
 
@@ -219,21 +209,25 @@ const groupedChampions = computed(() => {
 						/>
 					</div>
 
-					<!-- 常用英雄网格 - 显示前20个 -->
+					<!-- 英雄滑块列表 -->
 					<div class="mb-4">
-						<h4 class="text-sm font-medium mb-2 text-gray-600">常用英雄</h4>
-						<div v-for="(row, rowIndex) in groupedChampions" :key="rowIndex"
-							class="flex flex-row justify-between mb-3">
-							<div v-for="champ in row" :key="champ.id"
-								class="flex flex-col items-center cursor-pointer transition-all hover:scale-105"
-								:class="{ 'ring-2 ring-blue-500': selectedChampionId === champ.id }"
-								@click="selectedChampionId = champ.id; select_champion(champ.id)">
-								<champion-img :champion-id="champ.id" style="width: 50px" />
-								<span class="text-xs">{{ champ.name }}</span>
+						<h4 class="text-sm font-medium mb-2 text-gray-600">所有英雄 ({{ championList.length }})</h4>
+						<div class="h-64 overflow-y-auto border border-gray-200 rounded-lg p-2">
+							<div class="grid grid-cols-6 gap-2">
+								<div 
+									v-for="champ in championList" 
+									:key="champ.id"
+									class="flex flex-col items-center cursor-pointer transition-all hover:scale-105 p-2 rounded-lg"
+									:class="{ 
+										'bg-blue-100 ring-2 ring-blue-500': selectedChampionId === champ.id,
+										'hover:bg-gray-100': selectedChampionId !== champ.id
+									}"
+									@click="selectedChampionId = champ.id; select_champion(champ.id)"
+								>
+									<champion-img :champion-id="champ.id" style="width: 40px; height: 40px;" />
+									<span class="text-xs text-center mt-1 leading-tight">{{ champ.name }}</span>
+								</div>
 							</div>
-
-							<!-- 填充空位使每行保持5个 -->
-							<div v-for="i in 5 - row.length" :key="`empty-${i}`" class="w-[50px] opacity-0"></div>
 						</div>
 					</div>
 
