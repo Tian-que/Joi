@@ -138,6 +138,18 @@ export const banPickChampion = async (action: Action, champId: number, completed
 	});
 };
 
+export const lolChampSelect = async (champId: number, completed: boolean) => {
+	return await httpRequest({
+		method: "PATCH",
+		url: `lol-champ-select/v1/session/actions/1`,
+		body: {
+			championId: champId,
+			type: "pick",
+			completed: completed
+		}
+	});
+};
+
 //获取聊天会话
 export const getConversations = async () => {
 	return await httpRequest<Conversation[]>({
@@ -328,7 +340,7 @@ export async function createLobby() {
 					"duplicatePick": false,
 					"exclusivePick": true,
 					"gameModeOverride": null,
-					"id": 4,
+					"id": 1,
 					"learningQuests": false,
 					"mainPickTimerDuration": 0,
 					"maxAllowableBans": 0,

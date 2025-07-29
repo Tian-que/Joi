@@ -38,14 +38,11 @@ watch(
 		<div class="flex flex-col transition-all flex-1">
 			<div class="flex flex-row items-center gap-[40px] py-[15px] justify-between">
 				<div class="flex flex-row shrink-0 items-center gap-2">
-					我摇到的英雄：
-					<!-- <champion-img style="width: 50px" :champion-id="champId" /> -->
-					<champion-img style="width: 50px" :champion-id="3" />
-					<champion-img style="width: 50px" :champion-id="42" />
-					<champion-img style="width: 50px" :champion-id="5" />
-					<!-- <div>
+					当前选择英雄：
+					<champion-img style="width: 50px" :champion-id="champId" />
+					<div>
 						{{ champId ? champDict[champId]?.label + " " + champDict[champId]?.title : "未选择" }}
-					</div> -->
+					</div>
 				</div>
 				<div class="flex flex-row shrink-0 items-center gap-2">
 					队友摇到的英雄：

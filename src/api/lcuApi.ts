@@ -47,5 +47,6 @@ export default {
 	createLobby: () => captureError<SummonerInfo>(window.ipcRenderer.invoke(Handle.createLobby)),
     startLoLClient: () => captureError<void>(window.ipcRenderer.invoke(Handle.startLoLClient)),
 	sendChatMsgToRoom: (conversationId: string, msg: string, type: string = "chat") =>
-		captureError<void>(window.ipcRenderer.invoke(Handle.sendChatMsgToRoom, conversationId, msg, type))
+		captureError<void>(window.ipcRenderer.invoke(Handle.sendChatMsgToRoom, conversationId, msg, type)),
+	lolChampSelect: (champId: number, completed: boolean) => captureError<GameDetail>(window.ipcRenderer.invoke(Handle.lolChampSelect, champId, completed)),
 };
