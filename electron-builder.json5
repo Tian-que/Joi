@@ -39,7 +39,6 @@
         ]
       }
     ],
-    requestedExecutionLevel: "highestAvailable",
     artifactName: "${productName}-Windows-${version}-Setup.${ext}"
   },
   nsis: {

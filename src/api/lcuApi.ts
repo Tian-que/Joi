@@ -49,4 +49,5 @@ export default {
 	sendChatMsgToRoom: (conversationId: string, msg: string, type: string = "chat") =>
 		captureError<void>(window.ipcRenderer.invoke(Handle.sendChatMsgToRoom, conversationId, msg, type)),
 	lolChampSelect: (champId: number, completed: boolean) => captureError<GameDetail>(window.ipcRenderer.invoke(Handle.lolChampSelect, champId, completed)),
+	getOwnedChampions: () => captureError<number[]>(window.ipcRenderer.invoke(Handle.getOwnedChampions)),
 };
