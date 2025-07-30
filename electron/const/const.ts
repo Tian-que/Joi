@@ -1,6 +1,9 @@
 import { getAramBuffData } from "@@/lcu/aramBuff";
 
 export const Handle = {
+	lobbyconnected: "lcu:lobbyConnected",
+	lobbyDisconnect: "lcu:lobbyDisconnect",
+
 	connected: "lcu:connected", //客户端连接完成时发送信号
 	connecting: "lcu:connecting", //客户端连接中时发送信号
 	disconnect: "lcu:disconnect", //客户端断开连接时发送信号
@@ -26,7 +29,7 @@ export const Handle = {
 	playAgain: "lcu:playAgain", // 回到大厅
 	matchmaking: "lcu:matchmaking", //开始匹配 寻找对局
 	createLobby: "lcu:createLobby", //创建房间
-	members: "lcu:members",
+	lobby: "lcu:lobby",
 	lolChampSelect: "lcu:lolChampSelect",
 	openLogDir: "openLogDir", //打开日志文件夹
 	showMainWindow: "showMainWindow", //显示主界面

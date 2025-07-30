@@ -91,6 +91,7 @@ const select_champion = (id: number | boolean) => {
 	if (typeof id === 'number') {
 		console.log(`选择了英雄ID: ${id}`);
 		lcuApi.lolChampSelect(id, false);
+		champId.value = id
 		// 这里可以添加实际选择逻辑
 	} else if (id === true) {
 		console.log("确认选择");

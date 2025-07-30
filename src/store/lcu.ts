@@ -55,10 +55,16 @@ const useLCUStore = defineStore("lcu", () => {
 	const currentPosition = ref<PositionName>();
 	const currentChatRoomId = ref<string>();
 	const myTeam = ref<TeamMemberInfo[]>([]);
-	const lobbyMembers = ref<LobbyTeamMemberInfo[]>([]);
 	const myTeamAnalysisError = ref(false);
 	const theirTeam = ref<TeamMemberInfo[]>([]);
 	const theirTeamAnalysisError = ref(false);
+
+	// 是否为房主
+	const isLobbyOwner = ref(false);
+	const lobbyId = ref("");
+	const customTeam100 = ref<LobbyTeamMemberInfo[]>([]);
+	const customTeam200 = ref<LobbyTeamMemberInfo[]>([]);
+	const myTeamId = ref(0)
 
 	//我方队伍组队信息
 	const myTeamUpInfo = ref<Array<Array<string>>>([]);
@@ -202,9 +208,17 @@ const useLCUStore = defineStore("lcu", () => {
 	}
 
 	//更新房间内人员信息
-	async function updateLobbyMembersInfo(teams: LobbyTeamMemberInfo[]) {
-		lobbyMembers.value = await Promise.all(
-			teams.map(async (t) => {
+	async function updateLobbyLobbyInfo(data) {
+
+		// 更新房主信息
+		isLobbyOwner.value = data.localMember.isLeader;
+		// 更新房间ID
+		lobbyId.value = data.partyId
+		// 更新自身队伍ID
+		myTeamId.value = data.localMember.teamId
+
+		customTeam100.value = await Promise.all(
+			data.gameConfig.customTeam100.map(async (t) => {
 				const summonerInfo = await lcuApi.getSummonerByPuuid(t.puuid);
 				return {
 					puuid: t.puuid,
@@ -215,9 +229,34 @@ const useLCUStore = defineStore("lcu", () => {
 			})
 		).catch((e) => {
 			message.error(e.message);
-			console.log("对方成员信息失败：", (e as Error)?.message);
+			console.log("左边成员信息失败：", (e as Error)?.message);
 			return [];
 		});
+
+		customTeam200.value = await Promise.all(
+			data.gameConfig.customTeam200.map(async (t) => {
+				const summonerInfo = await lcuApi.getSummonerByPuuid(t.puuid);
+				return {
+					puuid: t.puuid,
+					summonerName: summonerInfo.gameName,
+					teamId: t.teamId,
+					summonerInfo: summonerInfo
+				} as LobbyTeamMemberInfo;
+			})
+		).catch((e) => {
+			message.error(e.message);
+			console.log("右边成员信息失败：", (e as Error)?.message);
+			return [];
+		});
+		// 队长时推送队伍信息到后端
+		if (isLobbyOwner) {
+			const datas = {
+				"partyId": lobbyId.value,
+				"customTeam100": customTeam100.value,
+				"customTeam200": customTeam200.value
+			}
+		}
+
 	}
 
 	async function fetchTeamMembersGameDetail(teams: TeamMemberInfo[]) {
@@ -272,7 +311,7 @@ const useLCUStore = defineStore("lcu", () => {
 		champId,
 		(n, o) => {
 			if (n) {
-				void router.push({ name: "inGame" });
+				// void router.push({ name: "inGame" });
 				opggRunes.value = [];
 				void fetchRune(n);
 			}

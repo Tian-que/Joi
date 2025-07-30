@@ -8,11 +8,20 @@ import { getCurrentSummoner } from "./lcuRequest";
 import logger from "../lib/logger";
 import { setting } from "../config";
 import { LobbyTeamMemberInfo } from "../types/lcuType";
+import { LobbyServerWebSocket, createLobbyWebSocketConnection } from "../lib/ws-lobby";
 
 let credentials: Credentials | null;
 let ws: LeagueWebSocket | null;
 let processChecker: ProcessChecker | null;
 let wsIsConnecting = false;
+
+// 内战服务端
+let lobbyws: LobbyServerWebSocket | null
+let lobbywsIsConnecting = false;
+
+const createLobbyWebSocketConnectionRetry = retryWrapper(createLobbyWebSocketConnection, 4, 1500);
+
+
 //重试包装
 const createWebSocketConnectionRetry = retryWrapper(createWebSocketConnection, 4, 1500);
 
@@ -77,7 +86,7 @@ export async function initLeagueWebSocket() {
 		return;
 	}
 	credentials = await getAuthInfo();
-  if (!setting.model.lolClientPath) {
+  	if (!setting.model.lolClientPath) {
 		setting.model.lolClientPath = credentials.commandLine?.replace(
 			"LeagueClient/LeagueClientUx.exe",
 			"TCLS/client.exe"
@@ -85,13 +94,27 @@ export async function initLeagueWebSocket() {
 		setting.updateSetting(setting.model);
 	}
 	//使用重试包装的版本，客户端刚启动的时候可能没法直接连上，因为lcu客户端可能还未初始化ws
-	ws = await createWebSocketConnectionRetry(credentials);
+	// ws = await createWebSocketConnectionRetry(credentials);
+	ws = await createLobbyWebSocketConnectionRetry();
 	ws.onclose = () => {
 		sendToWebContent(Handle.disconnect);
 		ws.subscriptions.clear();
 		ws = null;
 	};
 	wsSubscribe(ws);
+}
+
+export async function initLobbyLeagueWebSocket() {
+	if (lobbyws) {
+		return;
+	}
+	lobbyws = await createLobbyWebSocketConnectionRetry();
+	lobbyws.onclose = () => {
+		sendToWebContent(Handle.lobbyDisconnect);
+		lobbyws.subscriptions.clear();
+		ws = null;
+	};
+	wsLobbySubscribe(lobbyws);
 }
 
 //ws连接并监听事件
@@ -101,16 +124,26 @@ function wsSubscribe(ws: LeagueWebSocket) {
 		sendToWebContent(Handle.gameFlowPhase, data);
 		Object.values(LCUEventHandlers).forEach((handler) => handler(data));
 	});
-	ws.subscribe("/lol-lobby/v2/lobby/members", async (data) => {
-		let members = data.map(item => {
-			const member: LobbyTeamMemberInfo = {
-			    puuid: item.puuid,
-			    teamId: item.teamId
-			};
-			return member;
-		});
-		logger.info("members", members);
-		
-		sendToWebContent(Handle.members, members);
+	ws.subscribe("/lol-lobby/v2/lobby", async (data) => {
+		// 房间信息，有值变更 -> 更新房主信息 -> 更新房间id -> 更新队伍信息(如果是房主则推送)
+		// 房间信息，空值 -> 如果是房主，推送注销房间
+		logger.info("datas", data);
+		sendToWebContent(Handle.lobby, data);
 	});
 }
+
+//ws连接并监听事件
+function wsLobbySubscribe(ws: LobbyServerWebSocket) {
+	ws.subscribe("/lol-gameflow/v1/gameflow-phase", async (data) => {
+		logger.info("gameflow-phase", data);
+		sendToWebContent(Handle.gameFlowPhase, data);
+		Object.values(LCUEventHandlers).forEach((handler) => handler(data));
+	});
+	ws.subscribe("/lol-lobby/v2/lobby", async (data) => {
+		// 房间信息，有值变更 -> 更新房主信息 -> 更新房间id -> 更新队伍信息(如果是房主则推送)
+		// 房间信息，空值 -> 如果是房主，推送注销房间
+		logger.info("datas", data);
+		sendToWebContent(Handle.lobby, data);
+	});
+}
+

@@ -42,11 +42,11 @@ export function setupListener() {
 		console.log("gameTeams", teams);
 		lcuStore.updateTeamsInfo(teams);
 	});
-	window.ipcRenderer.on(Handle.members, async (event: IpcRendererEvent, members: LobbyTeamMemberInfo[]) => {
-		console.log("lobbyMenbers", members);
+	window.ipcRenderer.on(Handle.lobby, async (event: IpcRendererEvent, data) => {
+		console.log("lobbyMenbers", data);
 		
 		// logger.info("members", members);
-		lcuStore.updateLobbyMembersInfo(members);
+		lcuStore.updateLobbyLobbyInfo(data);
 	});
 
 	window.ipcRenderer.on(Handle.gameSessionMyTeam, async (event: IpcRendererEvent, myTeam: TeamMemberInfo[]) => {
