@@ -21,6 +21,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build && electron-builder --publish=never",
+    "build:win": "vue-tsc --noEmit && vite build && electron-builder --win --publish=never",
+    "build:win-unsigned": "cross-env CSC_IDENTITY_AUTO_DISCOVERY=false vue-tsc --noEmit && vite build && electron-builder --win --publish=never",
     "rebuild": "electron rebuild.js",
     "postinstall": "patch-package"
   },
@@ -35,6 +37,7 @@
     "@vitejs/plugin-vue-jsx": "^3.0.2",
     "autoprefixer": "^10.4.16",
     "better-sqlite3": "^8.6.0",
+    "cross-env": "^10.0.0",
     "electron": "26.2.0",
     "electron-builder": "^24.6.3",
     "electron-devtools-installer": "^3.2.0",

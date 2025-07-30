@@ -28,6 +28,7 @@ export const Handle = {
 	createLobby: "lcu:createLobby", //创建房间
 	members: "lcu:members",
 	lolChampSelect: "lcu:lolChampSelect",
+	getOwnedChampions: "lcu:getOwnedChampions", //获取玩家拥有的英雄
 	openLogDir: "openLogDir", //打开日志文件夹
 	showMainWindow: "showMainWindow", //显示主界面
 	log: "log", //记录日志

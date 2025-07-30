@@ -31,6 +31,7 @@
   },
   "include": [
     "src",
+    "types",
     "auto-imports.d.ts",
     "custom.d.ts"
   ],

@@ -295,7 +295,8 @@ export const getLobbyMembers = async () => {
 export const checkSelfIsLobbyLeader = async () => {
 	const lobbyMembers = await getLobbyMembers();
 	const selfPuuid = (await getCurrentSummoner()).puuid;
-	return lobbyMembers.find((m) => (m.puuid = selfPuuid)).isLeader;
+	const selfMember = lobbyMembers.find((m) => m.puuid === selfPuuid);
+	return selfMember?.isLeader ?? false;
 };
 
 //获取段位信息
@@ -323,53 +324,105 @@ export async function createLobby() {
 			"queueId": -1,
 			"isCustom": true,
 			"customGameLobby": {
-			  "lobbyName": "星天圣尊的对局",
-			  "lobbyPassword": "",
-			  "configuration": {
-				"mapId": 12,
-				"gameMode": "ARAM",
-				"mutators": {
-					"advancedLearningQuests": false,
-					"allowTrades": true,
-					"banMode": "SkipBanStrategy",
-					"banTimerDuration": 0,
-					"battleBoost": false,
-					"crossTeamChampionPool": false,
-					"deathMatch": false,
-					"doNotRemove": false,
-					"duplicatePick": false,
-					"exclusivePick": true,
-					"gameModeOverride": null,
-					"id": 1,
-					"learningQuests": false,
-					"mainPickTimerDuration": 0,
-					"maxAllowableBans": 0,
-					"name": "GAME_CFG_PICK_RANDOM",
-					"numPlayersPerTeamOverride": null,
-					"onboardCoopBeginner": false,
-					"pickMode": "AllRandomPickStrategy",
-					"postPickTimerDuration": 100,
-					"reroll": false,
-					"teamChampionPool": false
-				  },
-				"spectatorPolicy": "LobbyAllowed",
-				"teamSize": 2,
-				"maxPlayerCount": 10,
-				"tournamentGameMode": "",
-				"tournamentPassbackUrl": "",
-				"tournamentPassbackDataPacket": "",
-				"gameServerRegion": "",
-				"spectatorDelayEnabled": false,
-				"hidePublicly": false
-			  },
-			  "teamOne": [],
-			  "teamTwo": [],
-			  "spectators": [],
-			  "practiceGameRewardsDisabledReasons": [],
-			  "gameId": 0
+				"lobbyName": "星天圣尊的对局",
+				"lobbyPassword": "",
+				"configuration": {
+					"mapId": 12,
+					"gameMode": "ARAM",
+					"mutators": {
+						"advancedLearningQuests": false,
+						"allowTrades": true,
+						"banMode": "SkipBanStrategy",
+						"banTimerDuration": 0,
+						"battleBoost": false,
+						"crossTeamChampionPool": false,
+						"deathMatch": false,
+						"doNotRemove": false,
+						"duplicatePick": false,
+						"exclusivePick": true,
+						"gameModeOverride": null,
+						"id": 1,
+						"learningQuests": false,
+						"mainPickTimerDuration": 0,
+						"maxAllowableBans": 0,
+						"name": "GAME_CFG_PICK_RANDOM",
+						"numPlayersPerTeamOverride": null,
+						"onboardCoopBeginner": false,
+						"pickMode": "AllRandomPickStrategy",
+						"postPickTimerDuration": 100,
+						"reroll": false,
+						"teamChampionPool": false
+					},
+					"spectatorPolicy": "LobbyAllowed",
+					"teamSize": 2,
+					"maxPlayerCount": 10,
+					"tournamentGameMode": "",
+					"tournamentPassbackUrl": "",
+					"tournamentPassbackDataPacket": "",
+					"gameServerRegion": "",
+					"spectatorDelayEnabled": false,
+					"hidePublicly": false
+				},
+				"teamOne": [],
+				"teamTwo": [],
+				"spectators": [],
+				"practiceGameRewardsDisabledReasons": [],
+				"gameId": 0
 			},
 			"gameCustomization": {}
-		  }
-		  
+		}
+
 	});
+}
+
+// 获取玩家拥有的英雄
+export async function getOwnedChampions() {
+	// 尝试多个可能的端点
+	const endpoints = [
+		"/lol-champions/v1/owned-champions-minimal",
+		"/lol-champions/v1/inventories/1/champions",
+		"/lol-champions/v1/inventories/CHAMPION/champions"
+	];
+
+	for (const endpoint of endpoints) {
+		try {
+			if (endpoint === "/lol-champions/v1/owned-champions-minimal") {
+				const response = await httpRequest<any>({
+					method: "GET",
+					url: endpoint
+				});
+
+				// 处理不同的响应格式
+				let ownedChampions: number[] = [];
+				if (Array.isArray(response)) {
+					if (response.length > 0) {
+						if (typeof response[0] === 'number') {
+							// 直接是数字数组
+							ownedChampions = response;
+						} else if (typeof response[0] === 'object' && response[0].id) {
+							// 对象数组，提取 id
+							ownedChampions = response.map(item => item.id);
+						}
+					}
+				}
+
+				return ownedChampions || [];
+			} else {
+				const champions = await httpRequest<Array<{ id: number, ownership?: { owned: boolean } }>>({
+					method: "GET",
+					url: endpoint
+				});
+				const ownedIds = champions
+					.filter(champ => champ.ownership?.owned !== false)
+					.map(champ => champ.id);
+				return ownedIds || [];
+			}
+		} catch (error) {
+			continue;
+		}
+	}
+
+	// 如果所有端点都失败，返回一些常见英雄作为备选
+	logger.warn("获取拥有英雄失败，返回默认英雄列表");
+	return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; // 一些基础英雄ID
 }
