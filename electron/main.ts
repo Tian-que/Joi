@@ -98,16 +98,37 @@ export async function createWindow() {
 
 	if (process.env.VITE_DEV_SERVER_URL) {
 		await win.loadURL(process.env.VITE_DEV_SERVER_URL);
-		//win.webContents.openDevTools();
+		// 开发模式下自动打开开发者工具
+		win.webContents.openDevTools();
 	} else {
 		await win.loadFile(path.join(process.env.DIST, "index.html"));
-		//拦截快捷键Control+R
-		win.webContents.on("before-input-event", (event: Electron.Event, input: Electron.Input) => {
-			if (input.control && input.key.toLowerCase() === "r") {
-				event.preventDefault();
-			}
-		});
 	}
+	
+	// 添加键盘快捷键处理（开发和生产环境都支持）
+	win.webContents.on("before-input-event", (event: Electron.Event, input: Electron.Input) => {
+		// F12 打开/关闭开发者工具
+		if (input.key.toLowerCase() === "f12") {
+			if (win.webContents.isDevToolsOpened()) {
+				win.webContents.closeDevTools();
+			} else {
+				win.webContents.openDevTools();
+			}
+			event.preventDefault();
+		}
+		// 拦截快捷键Control+R（仅生产环境）
+		if (!process.env.VITE_DEV_SERVER_URL && input.control && input.key.toLowerCase() === "r") {
+			event.preventDefault();
+		}
+		// Ctrl+Shift+I 也可以打开开发者工具
+		if (input.control && input.shift && input.key.toLowerCase() === "i") {
+			if (win.webContents.isDevToolsOpened()) {
+				win.webContents.closeDevTools();
+			} else {
+				win.webContents.openDevTools();
+			}
+			event.preventDefault();
+		}
+	});
 	setupTitleBarHandler(win);
 }
 

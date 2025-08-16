@@ -41,6 +41,7 @@ export const Handle = {
 	registerSendKey: "robot:registerSendKey",
 	getAramBuffData: "getAramBuffData",
 	selectFile: "selectFile",
+	getLobbyUserState: "lcu:getLobbyUserState", //查询召唤师 通过puuid
 };
 
 export const chatDividerLine = "-----------------------------------------";

@@ -220,6 +220,8 @@ const useLCUStore = defineStore("lcu", () => {
 		customTeam100.value = await Promise.all(
 			data.gameConfig.customTeam100.map(async (t) => {
 				const summonerInfo = await lcuApi.getSummonerByPuuid(t.puuid);
+				const userState = await lcuApi.getLobbyUserState(t.puuid);
+				console.log(userState);
 				return {
 					puuid: t.puuid,
 					summonerName: summonerInfo.gameName,
@@ -357,8 +359,8 @@ const useLCUStore = defineStore("lcu", () => {
 	return {
 		champId,
 		updateChampId,
-		updateLobbyMembersInfo,
-		lobbyMembers,
+		updateLobbyLobbyInfo,
+		fetchTeamMembersGameDetail,
 		updateTeamsInfo,
 		currentChatRoomId,
 		currentGameMode,

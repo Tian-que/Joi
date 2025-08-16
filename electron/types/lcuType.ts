@@ -1,6 +1,11 @@
 import { GameMode, PositionName } from "@@/types/opgg_rank_type";
 import { PlayerNote } from "@@/types/type";
 
+export interface LobbyUserState {
+	client_id: string;
+	status: boolean;
+}
+
 export interface RPC {
 	errorCode?: string;
 	message?: string;

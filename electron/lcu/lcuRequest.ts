@@ -1,4 +1,5 @@
 import { createHttp1Request, EventCallback, HttpRequestOptions } from "../lib/league-connect";
+import { createHttp1Request as lobbyHttp1Request } from "../lib/ws-lobby";
 import { getCredentials, getLeagueWebSocket } from "./connector";
 import {
 	Action,
@@ -7,6 +8,7 @@ import {
 	GameDetail,
 	GameSessionData,
 	LobbyMember,
+	LobbyUserState,
 	MatchHistoryQueryResult,
 	RPC,
 	SummonerInfo
@@ -33,6 +35,27 @@ const httpRequest = async <T>(option: HttpRequestOptions<any>, errMsg?: string) 
 		}
 	}
 };
+
+const lobbyHttpRequest = async <T>(option: HttpRequestOptions<any>, errMsg?: string) => {
+	const response = await lobbyHttp1Request(option);
+	if (response.ok) {
+		return (response.text() ? (response.json() as T) : null) as T;
+	} else {
+		if (errMsg) {
+			throw new Error(errMsg);
+		} else {
+			throw new Error((response.json() as RPC).message);
+		}
+	}
+};
+
+//获取用户是否在线
+export async function getLobbyUserState(puuid: String) {
+	return await lobbyHttpRequest<LobbyUserState>({
+		method: "GET",
+		url: "/check/" + puuid
+	});
+}
 
 //获取当前召唤师信息
 export async function getCurrentSummoner() {
@@ -369,7 +392,6 @@ export async function createLobby() {
 			  "gameId": 0
 			},
 			"gameCustomization": {}
-		  }
-		  
+		}
 	});
 }

@@ -1,5 +1,5 @@
 import { Handle } from "@@/const/const";
-import { GameDetail, MatchHistoryQueryResult, SummonerInfo } from "@@/types/lcuType";
+import { GameDetail, LobbyUserState, MatchHistoryQueryResult, SummonerInfo } from "@@/types/lcuType";
 import useAppStore from "@/store/app";
 import { GameMode, PositionName, Rune } from "@@/types/opgg_rank_type";
 import { RuneConfig, RunesDBObj } from "@@/types/type";
@@ -39,6 +39,8 @@ export default {
 		captureError<SummonerInfo>(window.ipcRenderer.invoke(Handle.getSummonerByName, nickname)),
 	getSummonerByPuuid: (puuid: string) =>
 		captureError<SummonerInfo>(window.ipcRenderer.invoke(Handle.getSummonerByPuuid, puuid)),
+	getLobbyUserState: (puuid: string) =>
+		captureError<LobbyUserState>(window.ipcRenderer.invoke(Handle.getLobbyUserState, puuid)),
 	getCustomRunes: (champId: number, gameMode?: GameMode, position?: PositionName) =>
 		captureError<RunesDBObj[]>(window.ipcRenderer.invoke(Handle.getCustomRunes, champId, gameMode, position)),
 	getOPGGRunes: (champId: number, gameMode?: GameMode, position?: PositionName) =>
