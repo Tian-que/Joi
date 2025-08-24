@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket JSON 聊天室</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .subtitle {
+            color: #a0d2eb;
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .panels {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 900px) {
+            .panels {
+                flex-direction: column;
+            }
+        }
+        
+        .panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            flex: 1;
+        }
+        
+        .panel-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .panel-title i {
+            font-size: 1.8rem;
+            color: #4cc9f0;
+        }
+        
+        .panel-title h2 {
+            font-size: 1.8rem;
+        }
+        
+        .connection-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        input {
+            flex: 1;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            font-size: 1.1rem;
+            outline: none;
+        }
+        
+        input:focus {
+            box-shadow: 0 0 0 2px #4cc9f0;
+        }
+        
+        button {
+            padding: 14px 30px;
+            background: #4361ee;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        button:hover {
+            background: #3a56d4;
+            transform: translateY(-2px);
+        }
+        
+        button:active {
+            transform: translateY(1px);
+        }
+        
+        #connect-btn.connected {
+            background: #06d6a0;
+        }
+        
+        #connect-btn.connected:hover {
+            background: #05b58a;
+        }
+        
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-top: 20px;
+        }
+        
+        .disconnected {
+            background: rgba(231, 76, 60, 0.3);
+            color: #ff9e9e;
+            border: 1px solid #e74c3c;
+        }
+        
+        .connected {
+            background: rgba(46, 204, 113, 0.3);
+            color: #a0ffd0;
+            border: 1px solid #2ecc71;
+        }
+        
+        .json-editor {
+            margin-top: 20px;
+        }
+        
+        .json-editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .json-tools button {
+            padding: 10px 15px;
+            font-size: 0.9rem;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 20px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            font-size: 1.1rem;
+            font-family: 'Courier New', monospace;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            resize: vertical;
+            outline: none;
+        }
+        
+        textarea:focus {
+            border-color: #4cc9f0;
+            box-shadow: 0 0 0 2px rgba(76, 201, 240, 0.3);
+        }
+        
+        #messages {
+            list-style: none;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        #messages li {
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            background: rgba(40, 40, 80, 0.6);
+            animation: fadeIn 0.3s ease;
+            border-left: 4px solid #4361ee;
+        }
+        
+        #messages li.system {
+            background: rgba(44, 62, 80, 0.6);
+            border-left-color: #06d6a0;
+            font-style: italic;
+        }
+        
+        #messages li.own {
+            background: rgba(67, 97, 238, 0.2);
+            border-left-color: #4cc9f0;
+        }
+        
+        #messages li.error {
+            background: rgba(192, 57, 43, 0.3);
+            border-left-color: #e74c3c;
+        }
+        
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: #a0d2eb;
+        }
+        
+        .message-content {
+            font-size: 1.1rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .template-selector {
+            margin: 25px 0;
+        }
+        
+        .templates {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .template {
+            flex: 1;
+            min-width: 200px;
+            padding: 15px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px dashed #4cc9f0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .template:hover {
+            background: rgba(67, 97, 238, 0.2);
+            transform: translateY(-3px);
+        }
+        
+        .template h4 {
+            margin-bottom: 10px;
+            color: #4cc9f0;
+        }
+        
+        .template pre {
+            font-size: 0.9rem;
+            color: #b0e0e6;
+            overflow: hidden;
+        }
+        
+        .json-info {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            border: 1px solid rgba(76, 201, 240, 0.5);
+        }
+        
+        .json-info h3 {
+            color: #4cc9f0;
+            margin-bottom: 15px;
+        }
+        
+        .json-info ul {
+            padding-left: 25px;
+            line-height: 1.8;
+        }
+        
+        .json-info li {
+            margin-bottom: 10px;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        footer {
+            text-align: center;
+            padding: 30px 0 20px;
+            color: #a0d2eb;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-code"></i> WebSocket JSON 聊天室</h1>
+            <p class="subtitle">创建自定义JSON消息并通过WebSocket实时发送和接收</p>
+        </header>
+        
+        <div class="panels">
+            <div class="panel">
+                <div class="panel-title">
+                    <i class="fas fa-plug"></i>
+                    <h2>连接设置</h2>
+                </div>
+                
+                <div class="connection-form">
+                    <input type="text" id="client-id" placeholder="输入客户端ID (例如: user123)">
+                    <button id="connect-btn">
+                        <i class="fas fa-link"></i> 连接
+                    </button>
+                </div>
+                
+                <div id="connection-status" class="status disconnected">尚未连接</div>
+                
+                <div class="json-editor">
+                    <div class="json-editor-header">
+                        <h3><i class="fas fa-edit"></i> JSON 消息编辑器</h3>
+                        <div class="json-tools">
+                            <button id="format-btn">
+                                <i class="fas fa-align-left"></i> 格式化
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <textarea id="json-input" placeholder='输入有效的JSON，例如：
+{
+    "type": "message",
+    "content": "你好，世界！",
+    "recipient": "all"
+}'></textarea>
+                    
+                    <button onclick="sendMessage()" style="width: 100%; margin-top: 15px;">
+                        <i class="fas fa-paper-plane"></i> 发送 JSON 消息
+                    </button>
+                </div>
+                
+                <div class="template-selector">
+                    <h3><i class="fas fa-clipboard-list"></i> 消息模板</h3>
+                    <div class="templates">
+                        <div class="template" onclick="loadTemplate(1)">
+                            <h4>基础消息</h4>
+                            <pre>{
+  "type": "message",
+  "content": "你好！"
+}</pre>
+                        </div>
+                        <div class="template" onclick="loadTemplate(2)">
+                            <h4>用户指令</h4>
+                            <pre>{
+  "command": "update_status",
+  "status": "在线"
+}</pre>
+                        </div>
+                        <div class="template" onclick="loadTemplate(3)">
+                            <h4>系统通知</h4>
+                            <pre>{
+  "type": "notification",
+  "message": "系统维护中"
+}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-title">
+                    <i class="fas fa-comments"></i>
+                    <h2>消息历史</h2>
+                </div>
+                
+                <ul id="messages"></ul>
+                
+                <div class="json-info">
+                    <h3><i class="fas fa-info-circle"></i> 使用说明</h3>
+                    <ul>
+                        <li>在顶部输入您的客户端ID并点击"连接"按钮</li>
+                        <li>在JSON编辑器中输入或修改自定义JSON消息</li>
+                        <li>点击"格式化"按钮可以美化JSON格式</li>
+                        <li>从模板中选择示例或创建您自己的JSON结构</li>
+                        <li>点击"发送JSON消息"按钮发送您的自定义消息</li>
+                        <li>所有发送和接收的消息将显示在消息历史区域</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>WebSocket JSON 聊天室原型 | 支持完全自定义JSON消息 | 实时通信演示</p>
+        </footer>
+    </div>
+
+    <script>
+        let ws = null;
+        let client_id = null;
+        const connectBtn = document.getElementById('connect-btn');
+        const statusDiv = document.getElementById('connection-status');
+        const clientIdInput = document.getElementById('client-id');
+        const messagesList = document.getElementById('messages');
+        const jsonInput = document.getElementById('json-input');
+        const formatBtn = document.getElementById('format-btn');
+        
+        // 初始化一个随机的客户端ID
+        window.onload = function() {
+            const randomId = 'user_' + Math.floor(Math.random() * 1000);
+            clientIdInput.value = randomId;
+            jsonInput.value = JSON.stringify({
+                type: "message",
+                content: "你好，世界！",
+                timestamp: Date.now()
+            }, null, 2);
+        };
+        
+        // 连接按钮点击事件
+        connectBtn.addEventListener('click', function() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                // 如果已连接，则断开
+                ws.close();
+                return;
+            }
+            
+            client_id = clientIdInput.value.trim();
+            if (!client_id) {
+                addMessage('请输入客户端ID', 'error');
+                return;
+            }
+            
+            // 建立WebSocket连接
+            try {
+                // 在实际应用中，这里应该是您的WebSocket服务器地址
+                ws = new WebSocket(`ws://localhost:8000/ws/${client_id}`);
+                
+                ws.onopen = function() {
+                    statusDiv.textContent = `已连接 - 客户端ID: ${client_id}`;
+                    statusDiv.className = "status connected";
+                    connectBtn.innerHTML = '<i class="fas fa-unlink"></i> 断开连接';
+                    connectBtn.classList.add('connected');
+                    
+                    addMessage('连接服务器成功', 'system');
+                    addMessage(`您的客户端ID: ${client_id}`, 'system');
+                };
+                
+                ws.onmessage = function(event) {
+                    try {
+                        // 尝试解析JSON
+                        const data = JSON.parse(event.data);
+                        // 格式化JSON以便更好显示
+                        const formattedData = JSON.stringify(data, null, 2);
+                        addMessage(`收到消息:\n${formattedData}`, '');
+                    } catch (e) {
+                        // 如果无法解析为JSON，直接显示原始消息
+                        addMessage(event.data);
+                    }
+                };
+                
+                ws.onclose = function() {
+                    statusDiv.textContent = "连接已断开";
+                    statusDiv.className = "status disconnected";
+                    connectBtn.innerHTML = '<i class="fas fa-link"></i> 连接';
+                    connectBtn.classList.remove('connected');
+                    addMessage('连接已断开', 'system');
+                    ws = null;
+                };
+                
+                ws.onerror = function(error) {
+                    addMessage(`连接错误: ${error}`, 'error');
+                    statusDiv.textContent = "连接错误";
+                    statusDiv.className = "status disconnected";
+                };
+                
+            } catch (error) {
+                addMessage(`连接失败: ${error}`, 'error');
+            }
+        });
+        
+        // 格式化JSON
+        formatBtn.addEventListener('click', function() {
+            try {
+                const parsedJson = JSON.parse(jsonInput.value);
+                jsonInput.value = JSON.stringify(parsedJson, null, 2);
+            } catch (error) {
+                addMessage('JSON格式无效: ' + error.message, 'error');
+            }
+        });
+        
+        // 发送消息函数
+        function sendMessage() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                addMessage('请先连接服务器', 'error');
+                return;
+            }
+            
+            let jsonData;
+            try {
+                // 尝试解析用户输入的JSON
+                jsonData = JSON.parse(jsonInput.value);
+            } catch (error) {
+                addMessage('JSON格式无效: ' + error.message, 'error');
+                return;
+            }
+            
+            // 添加客户端ID和时间戳
+            jsonData.sender = client_id;
+            jsonData.timestamp = Date.now();
+            
+            // 发送JSON
+            ws.send(JSON.stringify(jsonData));
+            
+            // 在消息历史中显示自己发送的消息
+            const formattedData = JSON.stringify(jsonData, null, 2);
+            addMessage(`已发送:\n${formattedData}`, 'own');
+        }
+        
+        // 添加消息到历史记录
+        function addMessage(text, type = '') {
+            const message = document.createElement('li');
+            
+            if (type) {
+                message.classList.add(type);
+            }
+            
+            const now = new Date();
+            const timestamp = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+            
+            message.innerHTML = `
+                <div class="message-header">
+                    <span>${type === 'system' ? '系统' : (type === 'error' ? '错误' : (type === 'own' ? '我' : '收到'))}消息</span>
+                    <span>${timestamp}</span>
+                </div>
+                <div class="message-content">${text}</div>
+            `;
+            
+            messagesList.appendChild(message);
+            messagesList.scrollTop = messagesList.scrollHeight;
+        }
+        
+        // 加载模板
+        function loadTemplate(templateId) {
+            let template;
+            
+            switch(templateId) {
+                case 1:
+                    template = {
+                        type: "message",
+                        content: "你好，世界！"
+                    };
+                    break;
+                case 2:
+                    template = {
+                        command: "update_status",
+                        status: "在线"
+                    };
+                    break;
+                case 3:
+                    template = {
+                        type: "notification",
+                        message: "系统维护中"
+                    };
+                    break;
+                default:
+                    template = {
+                        type: "message",
+                        content: "自定义消息"
+                    };
+            }
+            
+            jsonInput.value = JSON.stringify(template, null, 2);
+            addMessage(`已加载模板 #${templateId}`, 'system');
+        }
+    </script>
+</body>
+</html>
