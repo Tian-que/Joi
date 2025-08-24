@@ -206,6 +206,14 @@ const useLCUStore = defineStore("lcu", () => {
 			};
 		}
 	}
+	//更新房间内可选英雄
+	async function updateLobbyChamps(data) {
+		const teamMembers = data.team_members
+		customTeam100.value.forEach(member => {member.randomChamps = member.puuid in teamMembers ? teamMembers[member.puuid] : []});
+		console.log(customTeam100.value)
+		customTeam200.value.forEach(member => {member.randomChamps = member.puuid in teamMembers ? teamMembers[member.puuid] : []});
+		console.log(customTeam200.value)
+	}
 
 	//更新房间内人员信息
 	async function updateLobbyLobbyInfo(data) {
@@ -220,11 +228,14 @@ const useLCUStore = defineStore("lcu", () => {
 		customTeam100.value = await Promise.all(
 			data.gameConfig.customTeam100.map(async (t) => {
 				const summonerInfo = await lcuApi.getSummonerByPuuid(t.puuid);
+				const userState = await lcuApi.getLobbyUserState(t.puuid);
 				return {
 					puuid: t.puuid,
 					summonerName: summonerInfo.gameName,
 					teamId: t.teamId,
-					summonerInfo: summonerInfo
+					summonerInfo: summonerInfo,
+					inLobbyServer: userState.status,
+					randomChamps: []
 				} as LobbyTeamMemberInfo;
 			})
 		).catch((e) => {
@@ -236,11 +247,14 @@ const useLCUStore = defineStore("lcu", () => {
 		customTeam200.value = await Promise.all(
 			data.gameConfig.customTeam200.map(async (t) => {
 				const summonerInfo = await lcuApi.getSummonerByPuuid(t.puuid);
+				const userState = await lcuApi.getLobbyUserState(t.puuid);
 				return {
 					puuid: t.puuid,
 					summonerName: summonerInfo.gameName,
 					teamId: t.teamId,
-					summonerInfo: summonerInfo
+					summonerInfo: summonerInfo,
+					inLobbyServer: userState.status,
+					randomChamps: []
 				} as LobbyTeamMemberInfo;
 			})
 		).catch((e) => {
@@ -356,9 +370,11 @@ const useLCUStore = defineStore("lcu", () => {
 
 	return {
 		champId,
+		customTeam100,
+		customTeam200,
 		updateChampId,
-		updateLobbyMembersInfo,
-		lobbyMembers,
+		updateLobbyLobbyInfo,
+		fetchTeamMembersGameDetail,
 		updateTeamsInfo,
 		currentChatRoomId,
 		currentGameMode,
@@ -386,7 +402,8 @@ const useLCUStore = defineStore("lcu", () => {
 		customRunes,
 		opggRunes,
 		initAramChampBuffMap,
-		aramChampBuffMap
+		aramChampBuffMap,
+		updateLobbyChamps
 	};
 });
 

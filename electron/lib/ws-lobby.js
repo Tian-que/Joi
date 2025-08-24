@@ -5,6 +5,7 @@ import util from "node:util";
 import { EventEmitter } from "events";
 // src/http.ts
 import https from "https";
+import http from "http"
 import { TextEncoder, TextEncoder as TextEncoder2 } from "util";
 import assert from "assert";
 import assert2 from "assert";
@@ -249,22 +250,20 @@ var Http1Response = class {
 	}
 };
 
-async function createHttp1Request(options, credentials) {
-	const agentOptions =
-		credentials.certificate === void 0 ? { rejectUnauthorized: false } : { ca: credentials.certificate };
+async function createHttp1Request(options) {
+	const agentOptions = { rejectUnauthorized: false };
 	return new Promise((resolve, reject) => {
-		const request = https.request(
+		const request = http.request(
 			{
 				host: "127.0.0.1",
-				port: credentials.port,
+				port: 8000,
 				path: "/" + trim(options.url),
 				method: options.method,
 				headers: {
 					Accept: "*/*",
-					"Content-Type": "application/json",
-					Authorization: "Basic " + Buffer.from(`riot:${credentials.password}`).toString("base64")
+					"Content-Type": "application/json"
 				},
-				agent: new https.Agent(agentOptions)
+				agent: new http.Agent(agentOptions)
 			},
 			(response) => {
 				let buffer = [];
@@ -387,17 +386,11 @@ class LobbyServerWebSocket extends WebSocket {
 	constructor(address, options) {
 		super(address, options);
 
-		// Subscribe to Json API
-		this.on("open", () => {
-			this.send(JSON.stringify([5, "OnJsonApiEvent"]));
-		});
-
 		// Attach the LobbyServerWebSocket subscription hook
 		this.on("message", (content) => {
 			// Attempt to parse into JSON and dispatch events
 			try {
-				const json = JSON.parse(content);
-				const [res] = json.slice(2);
+				const res = JSON.parse(content);
 
 				if (this.subscriptions.has(res.uri)) {
 					this.subscriptions.get(res.uri)?.forEach((cb) => {
@@ -424,8 +417,8 @@ class LobbyServerWebSocket extends WebSocket {
 	}
 }
 
-async function createLobbyWebSocketConnection() {
-	const url = `ws://localhost:8000/ws`;
+async function createLobbyWebSocketConnection(puuid) {
+	const url = `ws://localhost:8000/ws/` + puuid;
 	return await new Promise((resolve, reject) => {
 		const ws = new LobbyServerWebSocket(url, {});
 		const errorHandler = (ws.onerror = (err) => {
@@ -445,5 +438,6 @@ async function createLobbyWebSocketConnection() {
 
 export {
 	LobbyServerWebSocket,
-	createLobbyWebSocketConnection
+	createLobbyWebSocketConnection,
+	createHttp1Request
 };

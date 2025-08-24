@@ -43,10 +43,13 @@ export function setupListener() {
 		lcuStore.updateTeamsInfo(teams);
 	});
 	window.ipcRenderer.on(Handle.lobby, async (event: IpcRendererEvent, data) => {
-		console.log("lobbyMenbers", data);
+		lcuStore.updateLobbyLobbyInfo(data);
+	});
+	window.ipcRenderer.on(Handle.lobbyChampSelect, async (event: IpcRendererEvent, data) => {
+		console.log("lobbyChampSelect", data);
 		
 		// logger.info("members", members);
-		lcuStore.updateLobbyLobbyInfo(data);
+		lcuStore.updateLobbyChamps(data);
 	});
 
 	window.ipcRenderer.on(Handle.gameSessionMyTeam, async (event: IpcRendererEvent, myTeam: TeamMemberInfo[]) => {

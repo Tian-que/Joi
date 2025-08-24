@@ -3,12 +3,14 @@ import { getCredentials } from "./connector";
 import {
 	acceptGame,
 	checkSelfIsLobbyLeader,
+	getAllGridChampions,
 	getCurrentQueue,
 	getGameInfo,
 	getReadyCheckStatus,
 	listenChampSelect,
 	matchmaking,
-	playAgain
+	playAgain,
+	postLobbyChampions
 } from "./lcuRequest";
 import logger from "../lib/logger";
 import { setting } from "../config/";
@@ -51,6 +53,9 @@ export async function handelChampSelect(eventKey: string) {
 	unListenChampSelect = listenChampSelect((phaseSession: ChampSelectPhaseSession) => {
 		processGameSessionData(phaseSession, gameMode);
 	});
+
+	// 传递英雄列表
+	await postLobbyChampions()
 }
 
 //选择英雄结束，游戏准备开始

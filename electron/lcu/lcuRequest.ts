@@ -1,12 +1,15 @@
 import { createHttp1Request, EventCallback, HttpRequestOptions } from "../lib/league-connect";
+import { createHttp1Request as lobbyHttp1Request } from "../lib/ws-lobby";
 import { getCredentials, getLeagueWebSocket } from "./connector";
 import {
 	Action,
+	Champion,
 	ChampSelectPhaseSession,
 	Conversation,
 	GameDetail,
 	GameSessionData,
 	LobbyMember,
+	LobbyUserState,
 	MatchHistoryQueryResult,
 	RPC,
 	SummonerInfo
@@ -32,6 +35,62 @@ const httpRequest = async <T>(option: HttpRequestOptions<any>, errMsg?: string) 
 			throw new Error((response.json() as RPC).message);
 		}
 	}
+};
+
+const lobbyHttpRequest = async <T>(option: HttpRequestOptions<any>, errMsg?: string) => {
+	const response = await lobbyHttp1Request(option);
+	if (response.ok) {
+		return (response.text() ? (response.json() as T) : null) as T;
+	} else {
+		if (errMsg) {
+			throw new Error(errMsg);
+		} else {
+			throw new Error((response.json() as RPC).message);
+		}
+	}
+};
+
+//获取用户是否在线
+export async function getLobbyUserState(puuid: String) {
+	return await lobbyHttpRequest<LobbyUserState>({
+		method: "GET",
+		url: "/check/" + puuid
+	});
+}
+
+//上报对局可用英雄
+export async function postLobbyChampions() {
+	let champions = await getAllGridChampions()
+	const info = await getCurrentSummoner()
+	const lobby = await getLobby()
+	// info.puuid
+	await lobbyHttpRequest<Object>({
+		method: "POST",
+		url: "/select/" + info.puuid,
+		body: {
+			"party_id": lobby.partyId,
+			"my_team": lobby.localMember.teamId,
+			"my_champs": champions.filter((champ) => (!champ.disabled) && (champ.freeToPlay || champ.owned)).map((p) => p.id)
+		}
+	});
+}
+
+
+
+//查询选择阶段可用的英雄
+export const getAllGridChampions = async () => {
+	return await httpRequest<Champion[]>({
+		method: "GET",
+		url: "/lol-champ-select/v1/all-grid-champions"
+	});
+};
+
+//获取房间内信息
+export const getLobby = async () => {
+	return await httpRequest<Object>({
+		method: "GET",
+		url: "/lol-lobby/v2/lobby"
+	});
 };
 
 //获取当前召唤师信息
@@ -369,7 +428,6 @@ export async function createLobby() {
 			  "gameId": 0
 			},
 			"gameCustomization": {}
-		  }
-		  
+		}
 	});
 }

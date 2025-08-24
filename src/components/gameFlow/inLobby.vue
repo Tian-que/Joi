@@ -9,19 +9,13 @@ import { CheckmarkCircle16Regular } from "@vicons/fluent";
 import lcuApi from "@/api/lcuApi.js";
 
 const lcuStore = useLCUStore();
-const { champId, lobbyMembers, currentGameMode } = storeToRefs(lcuStore);
+const { champId, currentGameMode, customTeam100, customTeam200 } = storeToRefs(lcuStore);
 const tabVal = ref<"zixuan" | "huxuan">("zixuan");
 const randomChampCounts = ref<2 | 3>(2);
 
 // 计算每个队伍的成员（固定5个位置）
 const team100Members = computed(() => {
-	const members = lobbyMembers.value.filter(m => m.teamId === 100);
-	return Array.from({ length: 5 }, (_, i) => members[i] || null);
-});
-
-const team200Members = computed(() => {
-	const members = lobbyMembers.value.filter(m => m.teamId === 200);
-	return Array.from({ length: 5 }, (_, i) => members[i] || null);
+	return 
 });
 
 
@@ -30,32 +24,42 @@ const columns = [
 		title: '用户名',
 		key: 'userName',
 		width: 200,
-		render(row: any) {
-			let con = row.connect ? '[已连接]' : '[未连接]'
-			return con + row.userName;
+		render(row: LobbyTeamMemberInfo) {
+			let con = row.inLobbyServer ? '[已连接]' : '[未连接]'
+			return con + row.summonerName;
 		}
 	},
 	{
 		title: '选择英雄',
-		key: 'no',
-		render(row: any) {
+		key: 'selectChamp',
+		render(row: LobbyTeamMemberInfo) {
 			// 使用h函数渲染ChampionImg组件，将no作为championId传递
 			return h(ChampionImg, {
 				style: { width: '50px' },
-				championId: row.no
+				championId: 0
 			});
 		}
 	},
 	{
 		title: '摇到的英雄',
-		key: 'no',
-		render(row: any) {
+		key: 'randomChamp',
+		render(row: LobbyTeamMemberInfo) {
 			// 使用h函数渲染ChampionImg组件，将no作为championId传递
-			return h(ChampionImg, {
-				style: { width: '50px' },
-				championId: row.no
-			});
-		}
+			return h('div', { 
+                style: { 
+                    display: 'flex-row', 
+                    flexWrap: 'wrap', 
+                    gap: '8px' 
+                } 
+            }, 
+                row.randomChamps.map(championId => 
+                    h(ChampionImg, {
+                        style: { width: '50px' },
+                        championId: championId
+                    })
+                )
+            );
+        }
 	},
 ]
 
@@ -103,9 +107,10 @@ const select_champion = (id: number | boolean) => {
 
 // 计算每行5个英雄的分组
 const groupedChampions = computed(() => {
+	const championList = ([] as number[]).concat(...customTeam100.value.map(members => members.randomChamps)).sort((a, b) => a - b);
 	const result = [];
-	for (let i = 0; i < championList.value.length; i += 5) {
-		result.push(championList.value.slice(i, i + 5));
+	for (let i = 0; i < championList.length; i += 5) {
+		result.push(championList.slice(i, i + 5));
 	}
 	return result;
 });
@@ -141,7 +146,7 @@ const groupedChampions = computed(() => {
 			<div class="flex h-[15%]"></div>
 			<div class="flex flex-row">
 				<div class="flex flex-col w-[50%]">
-					<n-data-table size="small" :columns="columns" :data="data"
+					<n-data-table size="small" :columns="columns" :data="customTeam100"
 						:row-key="(member: LobbyTeamMemberInfo) => member.puuid" :bordered="false" />
 				</div>
 				<!-- 右侧英雄选择框 -->
@@ -151,11 +156,11 @@ const groupedChampions = computed(() => {
 					<!-- 英雄网格 - 每行5个 -->
 					<div v-for="(row, rowIndex) in groupedChampions" :key="rowIndex"
 						class="flex flex-row justify-between mb-3">
-						<div v-for="champ in row" :key="champ.id"
+						<div v-for="champ in row" :key="champ"
 							class="flex flex-col items-center cursor-pointer transition-all hover:scale-105"
-							@click="select_champion(champ.id)">
-							<champion-img :champion-id="champ.id" style="width: 50px" />
-							<span class="text-xs">{{ champ.name }}</span>
+							@click="select_champion(champ)">
+							<champion-img :champion-id="champ" style="width: 50px" />
+							<span class="text-xs">{{ champ }}</span>
 						</div>
 
 						<!-- 填充空位使每行保持5个 -->

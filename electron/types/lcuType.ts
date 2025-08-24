@@ -1,6 +1,11 @@
 import { GameMode, PositionName } from "@@/types/opgg_rank_type";
 import { PlayerNote } from "@@/types/type";
 
+export interface LobbyUserState {
+	client_id: string;
+	status: boolean;
+}
+
 export interface RPC {
 	errorCode?: string;
 	message?: string;
@@ -711,4 +716,35 @@ export interface LobbyTeamMemberInfo {
 	summonerName?: string;
 	summonerInfo?: SummonerInfo;
 	teamId: number;
+	inLobbyServer: boolean;
+	randomChamps: number[];
+}
+
+export interface Champion {
+    disabled: boolean,
+    freeToPlay: boolean,
+    freeToPlayForQueue: boolean,
+    id: number,
+    loyaltyReward: boolean,
+    masteryLevel: number,
+    masteryPoints: number,
+    name: string,
+    owned: boolean,
+    positionsFavorited: [],
+    rented: boolean,
+    roles: string[],
+    selectionStatus: selectionStatus,
+    squarePortraitPath: string,
+    xboxGPReward: boolean
+}
+
+export interface selectionStatus {
+	banIntented: boolean,
+	banIntentedByMe: boolean,
+	isBanned: boolean,
+	pickIntented: boolean,
+	pickIntentedByMe: boolean,
+	pickIntentedPosition: string,
+	pickedByOtherOrBanned: boolean,
+	selectedByMe: boolean
 }
